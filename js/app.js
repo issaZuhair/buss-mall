@@ -1,66 +1,120 @@
 'use strict';
-const items=['bag', 'banana', 'bathroom','breakfast','boots','bubblegum','chair','cthulhu','dog-duck','dragon','pen','pet-sweep',
+const goods = ['bag', 'banana', 'bathroom','breakfast','boots','bubblegum','chair','cthulhu','dog-duck','dragon','pen','pet-sweep',
   'scissors','shark','unicorn','usb','water-can','wine-glass'];
-const extensions=['jpg','gif'];
-const catalogeSection=document.getElementById('catalogeSection');
+const imageSection=document.getElementById('imagesSection');
 const leftImage=document.getElementById('leftImage');
-const rightImage=document.getElementById('rightImage');
 const centerImage=document.getElementById('centerImage');
+const rightImage=document.getElementById('rightImage');
+const extension=['jpg','gif'];
+let leftIndex;
+let centerIndex;
+let rightIndex;
 function Stats(item,extension){
-  this.extension=extension;
   this.item=item;
-  this.selection=0;
+  this.extension;
   this.views=0;
+  this.selections=0;
   this.path=`./img/${item}.${extension}`;
   Stats.all.push(this);
 }
-Stats.all=[ ];
-for(let i=0;i<items.length;i++){
-  if(items[i]!=='usb'){
-    new Stats(items[i],extensions[0]);
+Stats.all=[];
+for(let i=0;i<goods.length;i++){
+  if(goods[i]!=='usb'){
+    new Stats(goods[i],extension[0]);
   }else{
-    new Stats(items[i],extensions[1]);
+    new Stats(goods[i],extension[1]);
   }
 }
-let button=document.getElementById('button');
-button.addEventListener('click',buttonHandler);
-function buttonHandler(){
-  alert('you clicked the button// check the console \n to see the results');
-}
+console.table(Stats.all);
 function render(){
-  const leftIndex=intRandomGen(0,Stats.all.length-1);
-  const leftItem=Stats.all[leftIndex];
-  leftImage.src=leftItem.path;
-  leftImage.title=leftItem.item;
-  leftImage.alt=leftItem.item;
-  const rightIndex=intRandomGen(0,Stats.all.length-1);
-  const rightItem=Stats.all[rightIndex];
-  rightImage.src=rightItem.path;
-  rightImage.title=rightItem.item;
-  rightImage.alt=rightItem.item;
-  const centerIndex=intRandomGen(0,Stats.all.length-1);
-  const centerItem=Stats.all[centerIndex];
-  centerImage.src=centerItem.path;
-  centerImage.title=centerItem.item;
-  centerImage.alt=centerItem.item;
+  do{
+    leftIndex=randomNumber(0,Stats.all.length-1);
+    centerIndex=randomNumber(0,Stats.all.length-1);
+    rightIndex=randomNumber(0,Stats.all.length-1);
+  }while(leftIndex===centerIndex||leftIndex===rightIndex||centerIndex===rightIndex);
+  const leftRandomStats=Stats.all[leftIndex];
+  const centerRandomStats=Stats.all[centerIndex];
+  const rightRandomStats=Stats.all[rightIndex];
+  leftImage.src=leftRandomStats.path;
+  leftImage.title=leftRandomStats.item;
+  leftImage.alt=leftRandomStats.item;
+  centerImage.src=centerRandomStats.path;
+  centerImage.title=centerRandomStats.item;
+  centerImage.alt=centerRandomStats.item;
+  rightImage.src=rightRandomStats.path;
+  rightImage.title=rightRandomStats.item;
+  rightImage.alt=rightRandomStats.item;
+  
 }
-function intRandomGen(min,max){
-  return Math.floor(Math.random()*(max-min+1)+min);
-}
-catalogeSection.addEventListener('click',clickHandler);
+imageSection.addEventListener('click',clickHandler);
+let maxTrials=5;
 function clickHandler(event){
-  for(let i=0;i<Stats.all.length;i++){
-    if(rightImage.title===Stats.all[i].item || leftImage.title===Stats.all[i].item ||centerImage.title===Stats.all[i].item){
-      Stats.all[i].views++;
-      if(event.target.title===Stats.all[i].item && event.target.id==='leftImage'){ //|| event.target.id==='rightImage'){
-        Stats.all[i].selection++;
-      }
-      if(event.target.title===Stats.all[i].item && event.target.id==='rightImage'){
-        Stats.all[i].selection++;
+  maxTrials-=1;
+  if (event.target.id === 'leftImage' || event.target.id === 'rightImage' ||event.target.id==='centerImage'){
+    for(let i=0;i<Stats.all.length;i++){
+      if(rightImage.title===Stats.all[i].item || leftImage.title===Stats.all[i].item ||centerImage.title===Stats.all[i].item){
+        Stats.all[i].views++;}
+      if (Stats.all[i].item === event.target.title){
+        Stats.all[i].selections++;
+        console.table(Stats.all[i]);
       }
     }
+    render();
   }
-  console.table(Stats.all);
-  render();
+  if(maxTrials===0){
+    imageSection.removeEventListener('click',clickHandler);
+    createChart();
+  }
+}
+
+function randomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+function createChart(){
+  let context = document.getElementById('myChart').getContext('2d');
+  let getStatssgoods=[];
+  let getStatssselections=[];
+  let getStatssViews=[];
+
+  for(let i=0;i<Stats.all.length;i++){
+    getStatssgoods.push(Stats.all[i].item);
+
+  }
+  for(let i=0;i<Stats.all.length;i++){
+    getStatssViews.push(Stats.all[i].views);
+    getStatssselections.push(Stats.all[i].selections);
+  }
+  let chartObject={
+    // The type of chart we want to create
+    type: 'horizontalBar',
+    // The data for our dataset
+    data: {
+      labels:getStatssgoods,
+      datasets: [{
+        label: ['market voted'],
+        backgroundColor: '#595775',
+        borderColor: 'rgb(100, 20, 70)',
+        data: getStatssselections,
+      },
+      {
+        label: ['market views'],
+        backgroundColor: '#ABA6BF',
+        borderColor: 'rgb(100, 20, 70)',
+        data: getStatssViews,
+
+      }
+      ]
+    },
+    options: {
+      scales: {
+        xAxes: [{
+          barPercentage: 0.7,
+        }]
+      }
+    }
+  };
+  let chart = new Chart(context,chartObject);
 }
 render();
